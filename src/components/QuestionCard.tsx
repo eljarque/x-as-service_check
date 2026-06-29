@@ -1,4 +1,4 @@
-import { KeyRound, Users, RefreshCcw } from 'lucide-react';
+import { KeyRound, Users, RefreshCcw, AlertTriangle } from 'lucide-react';
 import type { Answer, AnswerTarget, AnswerValue, ConsumerTeam, QAnswer, Question } from '../types';
 import { classifyAnswer } from '../lib/verdict';
 
@@ -97,6 +97,12 @@ export function QuestionCard({ question, answer, consumerTeams, highlight, onCha
               value={answer?.provider?.value}
               onPick={(v) => onChange('provider', { value: v })}
             />
+            {question.isKey && answer?.provider?.value === 'na' && (
+              <div className="mt-2 flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">
+                <AlertTriangle className="w-3.5 h-3.5 flex-none text-amber-600" />
+                Una llave en N/A no permite concluir: respóndela Sí o No para obtener veredicto.
+              </div>
+            )}
             <textarea
               value={answer?.provider?.notes ?? ''}
               onChange={(e) => onChange('provider', { notes: e.target.value })}
