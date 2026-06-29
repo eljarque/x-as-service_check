@@ -6,6 +6,7 @@ interface Props {
   question: Question;
   answer: QAnswer | undefined;
   consumerTeams: ConsumerTeam[];
+  highlight?: boolean;
   onChange: (target: AnswerTarget, patch: Partial<Answer>) => void;
 }
 
@@ -54,11 +55,16 @@ function Selector({
   );
 }
 
-export function QuestionCard({ question, answer, consumerTeams, onChange }: Props) {
+export function QuestionCard({ question, answer, consumerTeams, highlight, onChange }: Props) {
   const showConsumer = question.isContrast && consumerTeams.length > 0;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 print-break">
+    <div
+      id={`q-${question.id}`}
+      className={`rounded-xl border bg-white p-4 print-break scroll-mt-24 transition ${
+        highlight ? 'border-brand-500 ring-2 ring-brand-300' : 'border-slate-200'
+      }`}
+    >
       <div className="flex items-start gap-2">
         <span className="flex-none text-xs font-bold text-slate-400 mt-0.5 w-7">{question.id}</span>
         <div className="flex-1">

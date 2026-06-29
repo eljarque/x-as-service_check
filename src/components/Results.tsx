@@ -1,7 +1,7 @@
-import { Download, Printer, Pencil, Home as HomeIcon, Info } from 'lucide-react';
+import { Download, Printer, Pencil, Home as HomeIcon, Info, ListTodo, KeyRound } from 'lucide-react';
 import type { Assessment, AnswerValue, DimensionId, DimensionStatusValue } from '../types';
 import { QUESTIONNAIRE } from '../data/questionnaire';
-import { computeVerdict, dimensionStatus } from '../lib/verdict';
+import { computeVerdict, dimensionStatus, pendingQuestions } from '../lib/verdict';
 import { exportJson } from '../lib/storage';
 import { VerdictBanner } from './VerdictBanner';
 import { RemediationMap } from './RemediationMap';
@@ -11,6 +11,7 @@ interface Props {
   assessment: Assessment;
   onEdit: () => void;
   onHome: () => void;
+  onGoToQuestion: (questionId: string) => void;
 }
 
 const STATUS_RING: Record<DimensionStatusValue, string> = {
@@ -25,9 +26,10 @@ const STATUS_DOT: Record<DimensionStatusValue, string> = {
 };
 const VAL_LABEL: Record<AnswerValue, string> = { si: 'Sí', parcial: 'Parcial', no: 'No', na: 'N/A' };
 
-export function Results({ assessment, onEdit, onHome }: Props) {
+export function Results({ assessment, onEdit, onHome, onGoToQuestion }: Props) {
   const verdict = computeVerdict(assessment);
   const hasContrast = assessment.consumerContrast && assessment.consumerTeams.length > 0;
+  const pending = pendingQuestions(assessment);
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 print-page">
@@ -88,6 +90,29 @@ export function Results({ assessment, onEdit, onHome }: Props) {
             cautela: la autoevaluación tiende a sobrestimar la madurez. Para validarlo, activa el
             contraste con el consumidor y compara las respuestas de los equipos que consumen el servicio.
           </span>
+        </div>
+      )}
+
+      {pending.length > 0 && (
+        <div className="no-print mt-3 rounded-lg border border-amber-200 bg-amber-50/70 p-3">
+          <div className="flex items-center gap-2 text-sm font-semibold text-amber-900">
+            <ListTodo className="w-4 h-4 text-amber-600" />
+            {pending.length} pregunta{pending.length > 1 ? 's' : ''} sin responder — ve directo a cada una:
+          </div>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {pending.map((p) => (
+              <li key={p.questionId}>
+                <button
+                  onClick={() => onGoToQuestion(p.questionId)}
+                  title={p.text}
+                  className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-white px-2.5 py-1 text-sm font-medium text-amber-800 hover:bg-amber-100"
+                >
+                  {p.isKey && <KeyRound className="w-3 h-3 text-brand-600" />}
+                  {p.questionId}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

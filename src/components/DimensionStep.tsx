@@ -6,10 +6,11 @@ import { gateBlocked } from '../lib/verdict';
 interface Props {
   dimension: Dimension;
   assessment: Assessment;
+  highlightQuestionId?: string;
   setAnswer: (questionId: string, target: AnswerTarget, patch: Partial<Answer>) => void;
 }
 
-export function DimensionStep({ dimension, assessment, setAnswer }: Props) {
+export function DimensionStep({ dimension, assessment, highlightQuestionId, setAnswer }: Props) {
   const blocked = gateBlocked(assessment, dimension.id);
   const keyQ = dimension.questions.find((q) => q.isKey)!;
   const followUps = dimension.questions.filter((q) => !q.isKey);
@@ -31,6 +32,7 @@ export function DimensionStep({ dimension, assessment, setAnswer }: Props) {
           question={keyQ}
           answer={assessment.answers[keyQ.id]}
           consumerTeams={assessment.consumerContrast ? assessment.consumerTeams : []}
+          highlight={highlightQuestionId === keyQ.id}
           onChange={(target, patch) => setAnswer(keyQ.id, target, patch)}
         />
 
@@ -50,6 +52,7 @@ export function DimensionStep({ dimension, assessment, setAnswer }: Props) {
               question={q}
               answer={assessment.answers[q.id]}
               consumerTeams={assessment.consumerContrast ? assessment.consumerTeams : []}
+              highlight={highlightQuestionId === q.id}
               onChange={(target, patch) => setAnswer(q.id, target, patch)}
             />
           ))

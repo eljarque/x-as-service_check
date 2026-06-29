@@ -47,9 +47,36 @@ function isBad(a: Assessment, questionId: string): boolean {
 }
 
 /** ¿La pregunta tiene una respuesta real? ("parcial" cuenta; vacío o "na" no). */
-function isAnswered(a: Assessment, questionId: string): boolean {
+export function isAnswered(a: Assessment, questionId: string): boolean {
   const v = providerValue(a, questionId);
   return v !== undefined && v !== 'na';
+}
+
+export interface PendingItem {
+  dimensionId: DimensionId;
+  dimensionIndex: number;
+  questionId: string;
+  isKey: boolean;
+  text: string;
+}
+
+/**
+ * Preguntas pendientes de responder (sin valor o en N/A). Respeta la regla de
+ * puerta: si una dimensión está bloqueada por su llave, las de profundización
+ * no se consideran pendientes (no hace falta responderlas).
+ */
+export function pendingQuestions(a: Assessment): PendingItem[] {
+  const out: PendingItem[] = [];
+  QUESTIONNAIRE.forEach((dim, idx) => {
+    const blocked = gateBlocked(a, dim.id);
+    for (const q of dim.questions) {
+      if (blocked && !q.isKey) continue;
+      if (!isAnswered(a, q.id)) {
+        out.push({ dimensionId: dim.id, dimensionIndex: idx, questionId: q.id, isKey: !!q.isKey, text: q.text });
+      }
+    }
+  });
+  return out;
 }
 
 /** ¿Está bloqueada la dimensión por la regla de puerta? (llave en respuesta "mala"). */

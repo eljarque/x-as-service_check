@@ -9,8 +9,14 @@ type View = 'home' | 'wizard' | 'results';
 
 export default function App() {
   const [view, setView] = useState<View>('home');
+  const [focusQuestion, setFocusQuestion] = useState<string | undefined>();
   const { assessment, setMeta, setAnswer, addConsumerTeam, renameConsumerTeam, removeConsumerTeam, replace, reset } =
     useAssessment();
+
+  const goToQuestion = (questionId: string) => {
+    setFocusQuestion(questionId);
+    setView('wizard');
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -42,6 +48,8 @@ export default function App() {
           <Wizard
             assessment={assessment}
             setAnswer={setAnswer}
+            focusQuestionId={focusQuestion}
+            onFocusConsumed={() => setFocusQuestion(undefined)}
             onBack={() => setView('home')}
             onFinish={() => setView('results')}
           />
@@ -51,6 +59,7 @@ export default function App() {
             assessment={assessment}
             onEdit={() => setView('wizard')}
             onHome={() => setView('home')}
+            onGoToQuestion={goToQuestion}
           />
         )}
       </main>
