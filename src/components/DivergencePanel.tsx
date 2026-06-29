@@ -39,7 +39,10 @@ export function DivergencePanel({ assessment }: { assessment: Assessment }) {
           </p>
           <ul className="mt-3 space-y-3">
             {divs.map((d) => (
-              <li key={d.questionId} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+              <li
+                key={`${d.questionId}:${d.consumerTeamId}`}
+                className="rounded-lg border border-slate-100 bg-slate-50 p-3"
+              >
                 <div className="text-sm text-slate-800">
                   <span className="font-bold text-slate-400 mr-1">{d.questionId}</span>
                   {d.text}
@@ -49,7 +52,7 @@ export function DivergencePanel({ assessment }: { assessment: Assessment }) {
                     Proveedor: {LABEL[d.provider]}
                   </span>
                   <span className={`rounded-md px-2 py-1 font-medium ${tone(d.questionId, d.consumer)}`}>
-                    Consumidor: {LABEL[d.consumer]}
+                    {d.consumerName || 'Consumidor'}: {LABEL[d.consumer]}
                   </span>
                 </div>
               </li>

@@ -9,7 +9,8 @@ type View = 'home' | 'wizard' | 'results';
 
 export default function App() {
   const [view, setView] = useState<View>('home');
-  const { assessment, setMeta, setAnswer, replace, reset } = useAssessment();
+  const { assessment, setMeta, setAnswer, addConsumerTeam, renameConsumerTeam, removeConsumerTeam, replace, reset } =
+    useAssessment();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -28,6 +29,9 @@ export default function App() {
           <Home
             assessment={assessment}
             setMeta={setMeta}
+            addConsumerTeam={addConsumerTeam}
+            renameConsumerTeam={renameConsumerTeam}
+            removeConsumerTeam={removeConsumerTeam}
             replace={replace}
             reset={reset}
             onStart={() => setView('wizard')}

@@ -1,12 +1,12 @@
 import { KeyRound, Users, RefreshCcw } from 'lucide-react';
-import type { Answer, AnswerValue, QAnswer, Question } from '../types';
+import type { Answer, AnswerTarget, AnswerValue, ConsumerTeam, QAnswer, Question } from '../types';
 import { classifyAnswer } from '../lib/verdict';
 
 interface Props {
   question: Question;
   answer: QAnswer | undefined;
-  consumerContrast: boolean;
-  onChange: (side: 'provider' | 'consumer', patch: Partial<Answer>) => void;
+  consumerTeams: ConsumerTeam[];
+  onChange: (target: AnswerTarget, patch: Partial<Answer>) => void;
 }
 
 const OPTIONS: { value: AnswerValue; label: string }[] = [
@@ -54,8 +54,8 @@ function Selector({
   );
 }
 
-export function QuestionCard({ question, answer, consumerContrast, onChange }: Props) {
-  const showConsumer = consumerContrast && question.isContrast;
+export function QuestionCard({ question, answer, consumerTeams, onChange }: Props) {
+  const showConsumer = question.isContrast && consumerTeams.length > 0;
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 print-break">
@@ -100,25 +100,29 @@ export function QuestionCard({ question, answer, consumerContrast, onChange }: P
             />
           </div>
 
-          {showConsumer && (
-            <div className="mt-3 rounded-lg bg-violet-50/60 border border-violet-100 p-3">
-              <div className="text-xs font-semibold text-violet-700 mb-1">
-                Consumidor (perspectiva del equipo que consume)
-              </div>
-              <Selector
-                question={question}
-                value={answer?.consumer?.value}
-                onPick={(v) => onChange('consumer', { value: v })}
-              />
-              <textarea
-                value={answer?.consumer?.notes ?? ''}
-                onChange={(e) => onChange('consumer', { notes: e.target.value })}
-                placeholder="Notas del consumidor…"
-                rows={2}
-                className="mt-2 w-full rounded-lg border border-violet-200 px-3 py-2 text-sm focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none bg-white"
-              />
-            </div>
-          )}
+          {showConsumer &&
+            consumerTeams.map((team) => {
+              const ans = answer?.consumers?.[team.id];
+              return (
+                <div key={team.id} className="mt-3 rounded-lg bg-violet-50/60 border border-violet-100 p-3">
+                  <div className="text-xs font-semibold text-violet-700 mb-1">
+                    Consumidor: {team.name || 'Equipo sin nombre'}
+                  </div>
+                  <Selector
+                    question={question}
+                    value={ans?.value}
+                    onPick={(v) => onChange({ consumerTeamId: team.id }, { value: v })}
+                  />
+                  <textarea
+                    value={ans?.notes ?? ''}
+                    onChange={(e) => onChange({ consumerTeamId: team.id }, { notes: e.target.value })}
+                    placeholder="Notas del consumidor…"
+                    rows={2}
+                    className="mt-2 w-full rounded-lg border border-violet-200 px-3 py-2 text-sm focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none bg-white"
+                  />
+                </div>
+              );
+            })}
         </div>
       </div>
     </div>

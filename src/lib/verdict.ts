@@ -13,8 +13,8 @@ function providerValue(a: Assessment, questionId: string): AnswerValue | undefin
   return a.answers[questionId]?.provider?.value;
 }
 
-function consumerValue(a: Assessment, questionId: string): AnswerValue | undefined {
-  return a.answers[questionId]?.consumer?.value;
+function consumerValue(a: Assessment, questionId: string, teamId: string): AnswerValue | undefined {
+  return a.answers[questionId]?.consumers?.[teamId]?.value;
 }
 
 /** Respuesta "buena" de una pregunta según su polaridad. */
@@ -139,7 +139,7 @@ export function computeVerdict(a: Assessment): VerdictResult {
   };
 }
 
-/** Divergencias proveedor↔consumidor en las preguntas de contraste. */
+/** Divergencias proveedor↔consumidor en las preguntas de contraste, por equipo. */
 export function divergences(a: Assessment): Divergence[] {
   if (!a.consumerContrast) return [];
   const out: Divergence[] = [];
@@ -147,9 +147,19 @@ export function divergences(a: Assessment): Divergence[] {
     for (const q of dim.questions) {
       if (!q.isContrast) continue;
       const p = providerValue(a, q.id);
-      const c = consumerValue(a, q.id);
-      if (p !== undefined && c !== undefined && p !== c) {
-        out.push({ questionId: q.id, text: q.text, provider: p, consumer: c });
+      if (p === undefined) continue;
+      for (const team of a.consumerTeams) {
+        const c = consumerValue(a, q.id, team.id);
+        if (c !== undefined && c !== p) {
+          out.push({
+            questionId: q.id,
+            text: q.text,
+            provider: p,
+            consumerTeamId: team.id,
+            consumerName: team.name,
+            consumer: c,
+          });
+        }
       }
     }
   }

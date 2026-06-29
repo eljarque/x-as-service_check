@@ -1,11 +1,14 @@
 import { useRef, useState } from 'react';
-import { FileUp, Play, RotateCcw, ListChecks, AlertCircle } from 'lucide-react';
+import { FileUp, Play, RotateCcw, ListChecks, AlertCircle, Plus, Trash2 } from 'lucide-react';
 import type { Assessment } from '../types';
 import { importJson } from '../lib/storage';
 
 interface Props {
   assessment: Assessment;
   setMeta: (patch: Partial<Assessment>) => void;
+  addConsumerTeam: (name: string) => void;
+  renameConsumerTeam: (id: string, name: string) => void;
+  removeConsumerTeam: (id: string) => void;
   replace: (a: Assessment) => void;
   reset: () => void;
   onStart: () => void;
@@ -21,7 +24,17 @@ const DIMENSIONS = [
   ['F', 'Gestión como producto', '¿Se conoce y mide a los consumidores?'],
 ];
 
-export function Home({ assessment, setMeta, replace, reset, onStart, onViewResults }: Props) {
+export function Home({
+  assessment,
+  setMeta,
+  addConsumerTeam,
+  renameConsumerTeam,
+  removeConsumerTeam,
+  replace,
+  reset,
+  onStart,
+  onViewResults,
+}: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const hasProgress = Object.keys(assessment.answers).length > 0;
@@ -97,15 +110,6 @@ export function Home({ assessment, setMeta, replace, reset, onStart, onViewResul
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none"
             />
           </label>
-          <label className="block">
-            <span className="text-sm font-medium text-slate-700">Equipo consumidor</span>
-            <input
-              value={assessment.consumerTeam}
-              onChange={(e) => setMeta({ consumerTeam: e.target.value })}
-              placeholder="Opcional"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none"
-            />
-          </label>
         </div>
 
         <label className="mt-4 flex items-start gap-3 rounded-lg bg-brand-50 border border-brand-100 p-3 cursor-pointer">
@@ -117,10 +121,47 @@ export function Home({ assessment, setMeta, replace, reset, onStart, onViewResul
           />
           <span className="text-sm text-slate-700">
             <strong>Contraste con el consumidor.</strong> Responder también algunas preguntas clave
-            (B1, D1, E2) desde la perspectiva del consumidor. La divergencia entre ambas
+            (B1, D1, E2) desde la perspectiva de los equipos consumidores. La divergencia entre las
             versiones es el dato más valioso de la sesión.
           </span>
         </label>
+
+        {assessment.consumerContrast && (
+          <div className="mt-3 rounded-lg border border-violet-100 bg-violet-50/50 p-3">
+            <div className="text-sm font-medium text-violet-800">
+              Equipos consumidores ({assessment.consumerTeams.length})
+            </div>
+            <p className="text-xs text-violet-600/80">
+              Añade cada equipo que consume el servicio. Cada uno responderá por separado las
+              preguntas de contraste.
+            </p>
+            <div className="mt-2 space-y-2">
+              {assessment.consumerTeams.map((team, i) => (
+                <div key={team.id} className="flex items-center gap-2">
+                  <input
+                    value={team.name}
+                    onChange={(e) => renameConsumerTeam(team.id, e.target.value)}
+                    placeholder={`Equipo consumidor ${i + 1}`}
+                    className="flex-1 rounded-lg border border-violet-200 bg-white px-3 py-2 text-sm focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none"
+                  />
+                  <button
+                    onClick={() => removeConsumerTeam(team.id)}
+                    title="Eliminar equipo"
+                    className="flex-none rounded-lg border border-slate-200 bg-white p-2 text-slate-500 hover:text-red-600 hover:border-red-200"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => addConsumerTeam('')}
+              className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-violet-300 bg-white px-3 py-1.5 text-sm font-medium text-violet-700 hover:bg-violet-50"
+            >
+              <Plus className="w-4 h-4" /> Añadir equipo consumidor
+            </button>
+          </div>
+        )}
 
         {error && (
           <div className="mt-4 flex items-center gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">

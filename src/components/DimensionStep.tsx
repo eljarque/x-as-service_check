@@ -1,12 +1,12 @@
 import { ShieldAlert } from 'lucide-react';
-import type { Answer, Assessment, Dimension } from '../types';
+import type { Answer, AnswerTarget, Assessment, Dimension } from '../types';
 import { QuestionCard } from './QuestionCard';
 import { gateBlocked } from '../lib/verdict';
 
 interface Props {
   dimension: Dimension;
   assessment: Assessment;
-  setAnswer: (questionId: string, side: 'provider' | 'consumer', patch: Partial<Answer>) => void;
+  setAnswer: (questionId: string, target: AnswerTarget, patch: Partial<Answer>) => void;
 }
 
 export function DimensionStep({ dimension, assessment, setAnswer }: Props) {
@@ -30,8 +30,8 @@ export function DimensionStep({ dimension, assessment, setAnswer }: Props) {
         <QuestionCard
           question={keyQ}
           answer={assessment.answers[keyQ.id]}
-          consumerContrast={assessment.consumerContrast}
-          onChange={(side, patch) => setAnswer(keyQ.id, side, patch)}
+          consumerTeams={assessment.consumerContrast ? assessment.consumerTeams : []}
+          onChange={(target, patch) => setAnswer(keyQ.id, target, patch)}
         />
 
         {blocked ? (
@@ -49,8 +49,8 @@ export function DimensionStep({ dimension, assessment, setAnswer }: Props) {
               key={q.id}
               question={q}
               answer={assessment.answers[q.id]}
-              consumerContrast={assessment.consumerContrast}
-              onChange={(side, patch) => setAnswer(q.id, side, patch)}
+              consumerTeams={assessment.consumerContrast ? assessment.consumerTeams : []}
+              onChange={(target, patch) => setAnswer(q.id, target, patch)}
             />
           ))
         )}

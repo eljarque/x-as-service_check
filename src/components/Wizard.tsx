@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { ArrowLeft, ArrowRight, Home as HomeIcon, Flag } from 'lucide-react';
-import type { Answer, Assessment, DimensionId, DimensionStatusValue } from '../types';
+import type { Answer, AnswerTarget, Assessment, DimensionId, DimensionStatusValue } from '../types';
 import { QUESTIONNAIRE } from '../data/questionnaire';
 import { dimensionStatus } from '../lib/verdict';
 import { DimensionStep } from './DimensionStep';
 
 interface Props {
   assessment: Assessment;
-  setAnswer: (questionId: string, side: 'provider' | 'consumer', patch: Partial<Answer>) => void;
+  setAnswer: (questionId: string, target: AnswerTarget, patch: Partial<Answer>) => void;
   onBack: () => void;
   onFinish: () => void;
 }

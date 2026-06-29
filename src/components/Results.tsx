@@ -66,9 +66,12 @@ export function Results({ assessment, onEdit, onHome }: Props) {
           Informe XaaS — {assessment.serviceName || 'Servicio sin nombre'}
         </h1>
         <p className="text-sm text-slate-500">
-          {[assessment.providerTeam && `Proveedor: ${assessment.providerTeam}`,
-            assessment.consumerTeam && `Consumidor: ${assessment.consumerTeam}`,
-            assessment.date]
+          {[
+            assessment.providerTeam && `Proveedor: ${assessment.providerTeam}`,
+            assessment.consumerTeams.length > 0 &&
+              `Consumidores: ${assessment.consumerTeams.map((t) => t.name || 'sin nombre').join(', ')}`,
+            assessment.date,
+          ]
             .filter(Boolean)
             .join(' · ')}
         </p>
@@ -115,15 +118,21 @@ export function Results({ assessment, onEdit, onHome }: Props) {
                 {d.questions.map((q) => {
                   const ans = assessment.answers[q.id];
                   const p = ans?.provider?.value;
-                  const c = ans?.consumer?.value;
+                  const showConsumers = assessment.consumerContrast && q.isContrast;
                   return (
                     <li key={q.id} className="text-sm text-slate-600 flex flex-wrap gap-x-2 border-b border-slate-50 py-1">
                       <span className="font-semibold text-slate-400">{q.id}</span>
                       <span className="flex-1 min-w-[12rem]">{q.text}</span>
                       <span className="font-medium text-slate-700">{p ? VAL_LABEL[p] : '—'}</span>
-                      {assessment.consumerContrast && q.isContrast && (
-                        <span className="text-violet-600">/ cons.: {c ? VAL_LABEL[c] : '—'}</span>
-                      )}
+                      {showConsumers &&
+                        assessment.consumerTeams.map((t) => {
+                          const cv = ans?.consumers?.[t.id]?.value;
+                          return (
+                            <span key={t.id} className="text-violet-600 whitespace-nowrap">
+                              / {t.name || 'cons.'}: {cv ? VAL_LABEL[cv] : '—'}
+                            </span>
+                          );
+                        })}
                       {ans?.provider?.notes && (
                         <span className="w-full text-xs text-slate-400 italic">↳ {ans.provider.notes}</span>
                       )}
