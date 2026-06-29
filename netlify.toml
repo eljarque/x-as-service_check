@@ -1,0 +1,22 @@
+[build]
+command = "npm run build"
+publish = "dist"
+
+[build.environment]
+NODE_VERSION = "18"
+# Note: do NOT set NODE_ENV=production here — it makes `npm install`
+# skip devDependencies, and vite (the build tool) lives there, which
+# breaks the build with "vite: not found".
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+
+[[headers]]
+for = "/*"
+[headers.values]
+  X-Content-Type-Options = "nosniff"
+  X-Frame-Options = "SAMEORIGIN"
+  X-XSS-Protection = "1; mode=block"
+  Referrer-Policy = "strict-origin-when-cross-origin"
