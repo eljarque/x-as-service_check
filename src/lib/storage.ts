@@ -1,6 +1,23 @@
-import type { Assessment } from '../types';
+import type { Assessment, QAnswer } from '../types';
+import { QUESTIONNAIRE } from '../data/questionnaire';
 
 const STORAGE_KEY = 'verificador-xaas:current';
+
+/** IDs de pregunta vigentes en el cuestionario actual. */
+const KNOWN_QUESTION_IDS = new Set(QUESTIONNAIRE.flatMap((d) => d.questions.map((q) => q.id)));
+
+/**
+ * Descarta respuestas a preguntas que ya no existen (p.ej. la antigua D2) al
+ * cargar/importar, para que los re-exports queden limpios y alineados con el
+ * cuestionario vigente. Los IDs nuevos (A4, E5) simplemente quedan vacíos.
+ */
+function sanitizeAnswers(answers: Record<string, QAnswer>): Record<string, QAnswer> {
+  const out: Record<string, QAnswer> = {};
+  for (const [id, value] of Object.entries(answers)) {
+    if (KNOWN_QUESTION_IDS.has(id) && value && typeof value === 'object') out[id] = value;
+  }
+  return out;
+}
 
 export function createEmptyAssessment(): Assessment {
   const now = new Date().toISOString();
@@ -57,7 +74,7 @@ export function normalize(raw: unknown): Assessment {
     consumerTeam: o.consumerTeam ?? '',
     date: o.date ?? now.slice(0, 10),
     consumerContrast: !!o.consumerContrast,
-    answers: o.answers as Assessment['answers'],
+    answers: sanitizeAnswers(o.answers as Assessment['answers']),
     updatedAt: o.updatedAt ?? now,
     version: 1,
   };
