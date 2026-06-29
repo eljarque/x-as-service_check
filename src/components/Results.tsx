@@ -1,4 +1,4 @@
-import { Download, Printer, Pencil, Home as HomeIcon } from 'lucide-react';
+import { Download, Printer, Pencil, Home as HomeIcon, Info } from 'lucide-react';
 import type { Assessment, AnswerValue, DimensionId, DimensionStatusValue } from '../types';
 import { QUESTIONNAIRE } from '../data/questionnaire';
 import { computeVerdict, dimensionStatus } from '../lib/verdict';
@@ -27,6 +27,7 @@ const VAL_LABEL: Record<AnswerValue, string> = { si: 'Sí', parcial: 'Parcial', 
 
 export function Results({ assessment, onEdit, onHome }: Props) {
   const verdict = computeVerdict(assessment);
+  const hasContrast = assessment.consumerContrast && assessment.consumerTeams.length > 0;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 print-page">
@@ -78,6 +79,17 @@ export function Results({ assessment, onEdit, onHome }: Props) {
       </div>
 
       <VerdictBanner verdict={verdict} />
+
+      {!hasContrast && (
+        <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 print-break">
+          <Info className="w-4 h-4 flex-none mt-0.5 text-amber-600" />
+          <span>
+            Este veredicto se basa <strong>solo en la autoevaluación del proveedor</strong>. Léelo con
+            cautela: la autoevaluación tiende a sobrestimar la madurez. Para validarlo, activa el
+            contraste con el consumidor y compara las respuestas de los equipos que consumen el servicio.
+          </span>
+        </div>
+      )}
 
       {/* Estado por dimensión */}
       <div className="mt-5 grid sm:grid-cols-2 gap-3 print-break">
