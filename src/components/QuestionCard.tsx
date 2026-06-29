@@ -1,5 +1,6 @@
-import { KeyRound, Users } from 'lucide-react';
+import { KeyRound, Users, RefreshCcw } from 'lucide-react';
 import type { Answer, AnswerValue, QAnswer, Question } from '../types';
+import { classifyAnswer } from '../lib/verdict';
 
 interface Props {
   question: Question;
@@ -8,17 +9,27 @@ interface Props {
   onChange: (side: 'provider' | 'consumer', patch: Partial<Answer>) => void;
 }
 
-const OPTIONS: { value: AnswerValue; label: string; cls: string; active: string }[] = [
-  { value: 'si', label: 'Sí', cls: 'border-emerald-300 text-emerald-700', active: 'bg-emerald-600 text-white border-emerald-600' },
-  { value: 'parcial', label: 'Parcial', cls: 'border-amber-300 text-amber-700', active: 'bg-amber-500 text-white border-amber-500' },
-  { value: 'no', label: 'No', cls: 'border-red-300 text-red-700', active: 'bg-red-600 text-white border-red-600' },
-  { value: 'na', label: 'N/A', cls: 'border-slate-300 text-slate-500', active: 'bg-slate-500 text-white border-slate-500' },
+const OPTIONS: { value: AnswerValue; label: string }[] = [
+  { value: 'si', label: 'Sí' },
+  { value: 'parcial', label: 'Parcial' },
+  { value: 'no', label: 'No' },
+  { value: 'na', label: 'N/A' },
 ];
 
+// Color según si la opción es buena/mala para esa pregunta (respeta la polaridad).
+const TONE: Record<'good' | 'bad' | 'partial' | 'na', { cls: string; active: string }> = {
+  good: { cls: 'border-emerald-300 text-emerald-700', active: 'bg-emerald-600 text-white border-emerald-600' },
+  bad: { cls: 'border-red-300 text-red-700', active: 'bg-red-600 text-white border-red-600' },
+  partial: { cls: 'border-amber-300 text-amber-700', active: 'bg-amber-500 text-white border-amber-500' },
+  na: { cls: 'border-slate-300 text-slate-500', active: 'bg-slate-500 text-white border-slate-500' },
+};
+
 function Selector({
+  question,
   value,
   onPick,
 }: {
+  question: Question;
   value: AnswerValue | undefined;
   onPick: (v: AnswerValue) => void;
 }) {
@@ -26,12 +37,13 @@ function Selector({
     <div className="flex flex-wrap gap-2">
       {OPTIONS.map((o) => {
         const active = value === o.value;
+        const tone = TONE[classifyAnswer(question, o.value)];
         return (
           <button
             key={o.value}
             onClick={() => onPick(o.value)}
             className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
-              active ? o.active : `bg-white hover:bg-slate-50 ${o.cls}`
+              active ? tone.active : `bg-white hover:bg-slate-50 ${tone.cls}`
             }`}
           >
             {o.label}
@@ -61,6 +73,11 @@ export function QuestionCard({ question, answer, consumerContrast, onChange }: P
                 <Users className="w-3 h-3" /> Contraste
               </span>
             )}
+            {question.invert && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 text-orange-700 text-xs font-semibold px-2 py-0.5">
+                <RefreshCcw className="w-3 h-3" /> "No" es lo bueno
+              </span>
+            )}
           </div>
           <p className="mt-1 text-slate-800">{question.text}</p>
           {question.hint && <p className="mt-1 text-xs text-slate-500 italic">{question.hint}</p>}
@@ -70,6 +87,7 @@ export function QuestionCard({ question, answer, consumerContrast, onChange }: P
               <div className="text-xs font-semibold text-slate-500 mb-1">Proveedor</div>
             )}
             <Selector
+              question={question}
               value={answer?.provider?.value}
               onPick={(v) => onChange('provider', { value: v })}
             />
@@ -88,6 +106,7 @@ export function QuestionCard({ question, answer, consumerContrast, onChange }: P
                 Consumidor (perspectiva del equipo que consume)
               </div>
               <Selector
+                question={question}
                 value={answer?.consumer?.value}
                 onPick={(v) => onChange('consumer', { value: v })}
               />

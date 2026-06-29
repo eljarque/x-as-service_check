@@ -117,7 +117,7 @@ export function Home({ assessment, setMeta, replace, reset, onStart, onViewResul
           />
           <span className="text-sm text-slate-700">
             <strong>Contraste con el consumidor.</strong> Responder también algunas preguntas clave
-            (B1, D1, D2, E2) desde la perspectiva del consumidor. La divergencia entre ambas
+            (B1, D1, E2) desde la perspectiva del consumidor. La divergencia entre ambas
             versiones es el dato más valioso de la sesión.
           </span>
         </label>

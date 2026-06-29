@@ -38,9 +38,9 @@ export function DimensionStep({ dimension, assessment, setAnswer }: Props) {
           <div className="rounded-xl border border-red-200 bg-red-50 p-4 flex gap-3">
             <ShieldAlert className="w-5 h-5 text-red-600 flex-none mt-0.5" />
             <div className="text-sm text-red-800">
-              <strong>Regla de puerta:</strong> la llave es “no”, así que esta dimensión queda en{' '}
-              <strong>rojo</strong>. No hace falta responder el resto; usa las notas de la llave para
-              dimensionar el gap y continúa a la siguiente dimensión.
+              <strong>Regla de puerta:</strong> la respuesta a la llave es desfavorable, así que esta
+              dimensión queda en <strong>rojo</strong>. No hace falta responder el resto; usa las
+              notas de la llave para dimensionar el gap y continúa a la siguiente dimensión.
             </div>
           </div>
         ) : (

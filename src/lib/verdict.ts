@@ -4,6 +4,7 @@ import type {
   DimensionId,
   DimensionStatusValue,
   Divergence,
+  Question,
   VerdictResult,
 } from '../types';
 import { QUESTIONNAIRE, DIMENSION_BY_ID, keyQuestion, questionById } from '../data/questionnaire';
@@ -16,43 +17,70 @@ function consumerValue(a: Assessment, questionId: string): AnswerValue | undefin
   return a.answers[questionId]?.consumer?.value;
 }
 
-/** ¿Está bloqueada la dimensión por la regla de puerta? (llave en "no"). */
+/** Respuesta "buena" de una pregunta según su polaridad. */
+export function goodAnswer(q: Question): AnswerValue {
+  return q.invert ? 'no' : 'si';
+}
+
+/** Respuesta "mala" de una pregunta según su polaridad. */
+export function badAnswer(q: Question): AnswerValue {
+  return q.invert ? 'si' : 'no';
+}
+
+/** Clasifica una respuesta en good/bad/partial/na teniendo en cuenta la polaridad. */
+export function classifyAnswer(q: Question, v: AnswerValue): 'good' | 'bad' | 'partial' | 'na' {
+  if (v === 'na') return 'na';
+  if (v === 'parcial') return 'partial';
+  return v === goodAnswer(q) ? 'good' : 'bad';
+}
+
+function isGood(a: Assessment, questionId: string): boolean {
+  const q = questionById(questionId);
+  const v = providerValue(a, questionId);
+  return !!q && v !== undefined && classifyAnswer(q, v) === 'good';
+}
+
+function isBad(a: Assessment, questionId: string): boolean {
+  const q = questionById(questionId);
+  const v = providerValue(a, questionId);
+  return !!q && v !== undefined && classifyAnswer(q, v) === 'bad';
+}
+
+/** ¿Está bloqueada la dimensión por la regla de puerta? (llave en respuesta "mala"). */
 export function gateBlocked(a: Assessment, dimensionId: string): boolean {
   const key = keyQuestion(dimensionId);
-  return !!key && providerValue(a, key.id) === 'no';
+  return !!key && isBad(a, key.id);
 }
 
 /**
  * Estado de una dimensión:
- *  - rojo: la llave es "no".
- *  - verde: la llave es "sí" y las de profundización son mayoritariamente "sí".
+ *  - rojo: la llave da su respuesta "mala".
+ *  - verde: la llave es "buena" y las de profundización son mayoritariamente "buenas".
  *  - ámbar: el resto (incluye llave sin responder o profundización floja).
  */
 export function dimensionStatus(a: Assessment, dimensionId: DimensionId): DimensionStatusValue {
   const dim = DIMENSION_BY_ID[dimensionId];
   const key = dim.questions.find((q) => q.isKey);
-  const keyVal = key ? providerValue(a, key.id) : undefined;
 
-  if (keyVal === 'no') return 'rojo';
-  if (keyVal !== 'si') return 'ambar';
+  if (key && isBad(a, key.id)) return 'rojo';
+  if (!key || !isGood(a, key.id)) return 'ambar';
 
   const followUps = dim.questions.filter((q) => !q.isKey);
   if (followUps.length === 0) return 'verde';
 
   const scored = followUps
-    .map((q) => providerValue(a, q.id))
-    .filter((v): v is AnswerValue => v !== undefined && v !== 'na');
+    .map((q) => ({ q, v: providerValue(a, q.id) }))
+    .filter((x): x is { q: Question; v: AnswerValue } => x.v !== undefined && x.v !== 'na');
 
   if (scored.length === 0) return 'ambar';
 
-  const positives = scored.filter((v) => v === 'si').length;
+  const positives = scored.filter((x) => classifyAnswer(x.q, x.v) === 'good').length;
   return positives / scored.length >= 0.5 ? 'verde' : 'ambar';
 }
 
-/** Las dimensiones de C y D son mayoritariamente "sí" (incluyendo su llave). */
-function mostlyYes(a: Assessment, dimensionId: DimensionId): boolean {
-  const status = dimensionStatus(a, dimensionId);
-  return status === 'verde';
+/** Una dimensión es mayoritariamente "buena" (verde). */
+function mostlyGood(a: Assessment, dimensionId: DimensionId): boolean {
+  return dimensionStatus(a, dimensionId) === 'verde';
 }
 
 const KEY_IDS: Record<DimensionId, string> = Object.fromEntries(
@@ -61,13 +89,8 @@ const KEY_IDS: Record<DimensionId, string> = Object.fromEntries(
 
 /** Calcula el veredicto global según el algoritmo del cuestionario. */
 export function computeVerdict(a: Assessment): VerdictResult {
-  const a1 = providerValue(a, 'A1');
-  const b1 = providerValue(a, 'B1');
-  const c1 = providerValue(a, 'C1');
-  const d1 = providerValue(a, 'D1');
-
   // No es XaaS: A1 o B1 fallan.
-  if (a1 === 'no' || b1 === 'no') {
+  if (isBad(a, 'A1') || isBad(a, 'B1')) {
     return {
       id: 'no_xaas',
       label: 'No es XaaS',
@@ -76,11 +99,8 @@ export function computeVerdict(a: Assessment): VerdictResult {
     };
   }
 
-  // Si las llaves base aún no están respondidas, no concluimos.
-  const allKeysAnswered = (Object.values(KEY_IDS) as string[]).every(
-    (id) => providerValue(a, id) !== undefined,
-  );
-  if (a1 !== 'si' || b1 !== 'si') {
+  // Si las llaves base aún no están en "bueno", no concluimos.
+  if (!isGood(a, 'A1') || !isGood(a, 'B1')) {
     return {
       id: 'incompleto',
       label: 'Evaluación incompleta',
@@ -89,7 +109,7 @@ export function computeVerdict(a: Assessment): VerdictResult {
   }
 
   // XaaS nominal: A sí, pero C1 o D1 fallan. La etiqueta existe; la protección, no.
-  if (c1 === 'no' || d1 === 'no') {
+  if (isBad(a, 'C1') || isBad(a, 'D1')) {
     return {
       id: 'nominal',
       label: 'XaaS nominal',
@@ -97,13 +117,16 @@ export function computeVerdict(a: Assessment): VerdictResult {
     };
   }
 
-  // XaaS sólido: las 6 llaves en "sí" y C y D mayoritariamente en "sí".
-  const allKeysYes = (Object.values(KEY_IDS) as string[]).every((id) => providerValue(a, id) === 'si');
-  if (allKeysAnswered && allKeysYes && mostlyYes(a, 'C') && mostlyYes(a, 'D')) {
+  // XaaS sólido: las 6 llaves correctas y C y D mayoritariamente "buenas".
+  const allKeysAnswered = (Object.values(KEY_IDS) as string[]).every(
+    (id) => providerValue(a, id) !== undefined,
+  );
+  const allKeysGood = (Object.values(KEY_IDS) as string[]).every((id) => isGood(a, id));
+  if (allKeysAnswered && allKeysGood && mostlyGood(a, 'C') && mostlyGood(a, 'D')) {
     return {
       id: 'solido',
       label: 'XaaS sólido',
-      rationale: 'Las 6 llaves en "sí" y las dimensiones C y D mayoritariamente en "sí".',
+      rationale: 'Las 6 llaves correctas y las dimensiones C y D mayoritariamente bien.',
     };
   }
 
@@ -112,7 +135,7 @@ export function computeVerdict(a: Assessment): VerdictResult {
     id: 'parcial',
     label: 'XaaS parcial / en progreso',
     rationale:
-      'Las llaves básicas se cumplen y no hay fallos críticos, pero todavía no se alcanza el nivel sólido (faltan llaves por responder o C/D no son mayoritariamente "sí").',
+      'Las llaves básicas se cumplen y no hay fallos críticos, pero todavía no se alcanza el nivel sólido (faltan llaves por responder o C/D no son mayoritariamente correctas).',
   };
 }
 

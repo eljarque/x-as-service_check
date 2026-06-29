@@ -18,6 +18,7 @@ export interface Question {
   text: string;
   isKey?: boolean; // pregunta "llave" (regla de puerta)
   isContrast?: boolean; // se pregunta también al consumidor
+  invert?: boolean; // si true, la respuesta "buena" es "no" (p.ej. D1, D3)
   hint?: string; // nota/aclaración del cuestionario
 }
 

@@ -17,7 +17,9 @@ Herramienta de evaluación para distinguir un servicio que se consume realmente 
 
 **Veredictos:** No es XaaS (falla A1 o B1) · XaaS nominal (A bien pero falla C1 o D1) · XaaS sólido (6 llaves en "sí" y C/D mayoritariamente "sí") · XaaS parcial (intermedio).
 
-**Contraste con el consumidor:** las preguntas B1/D1/D2/E2 pueden responderse también desde la perspectiva del consumidor; la app resalta la divergencia.
+**Contraste con el consumidor:** las preguntas B1/D1/E2 pueden responderse también desde la perspectiva del consumidor; la app resalta la divergencia.
+
+**Polaridad:** todas las preguntas son binarias sí/no. En algunas (D1, D3) la respuesta "buena" es **no** (marcadas en la UI con "No es lo bueno"); la lógica de puerta y veredicto lo tiene en cuenta.
 
 ## Stack
 
