@@ -107,11 +107,21 @@ export function computeVerdict(a: Assessment): VerdictResult {
 
   // Si las llaves base aún no se han respondido, no concluimos. "Parcial" sí
   // cuenta como respuesta; solo bloquea estar sin contestar (vacío o N/A).
-  if (!isAnswered(a, 'A1') || !isAnswered(a, 'B1')) {
+  const baseKeys = [
+    { id: 'A1', label: 'Contrato (A1)' },
+    { id: 'B1', label: 'Versionado (B1)' },
+  ];
+  const blocking = baseKeys.filter((k) => !isAnswered(a, k.id));
+  if (blocking.length > 0) {
+    const naList = blocking.filter((k) => providerValue(a, k.id) === 'na').map((k) => k.label);
+    const emptyList = blocking.filter((k) => providerValue(a, k.id) === undefined).map((k) => k.label);
+    const parts: string[] = [];
+    if (naList.length) parts.push(`${naList.join(' y ')} en N/A`);
+    if (emptyList.length) parts.push(`${emptyList.join(' y ')} sin responder`);
     return {
       id: 'incompleto',
       label: 'Evaluación incompleta',
-      rationale: 'Responde al menos las llaves de Contrato (A1) y Versionado (B1) para obtener un veredicto.',
+      rationale: `Las llaves fundamentales deben responderse Sí o No (N/A no permite concluir). Pendiente: ${parts.join('; ')}.`,
     };
   }
 
