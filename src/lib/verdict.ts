@@ -46,6 +46,12 @@ function isBad(a: Assessment, questionId: string): boolean {
   return !!q && v !== undefined && classifyAnswer(q, v) === 'bad';
 }
 
+/** ¿La pregunta tiene una respuesta real? ("parcial" cuenta; vacío o "na" no). */
+function isAnswered(a: Assessment, questionId: string): boolean {
+  const v = providerValue(a, questionId);
+  return v !== undefined && v !== 'na';
+}
+
 /** ¿Está bloqueada la dimensión por la regla de puerta? (llave en respuesta "mala"). */
 export function gateBlocked(a: Assessment, dimensionId: string): boolean {
   const key = keyQuestion(dimensionId);
@@ -99,8 +105,9 @@ export function computeVerdict(a: Assessment): VerdictResult {
     };
   }
 
-  // Si las llaves base aún no están en "bueno", no concluimos.
-  if (!isGood(a, 'A1') || !isGood(a, 'B1')) {
+  // Si las llaves base aún no se han respondido, no concluimos. "Parcial" sí
+  // cuenta como respuesta; solo bloquea estar sin contestar (vacío o N/A).
+  if (!isAnswered(a, 'A1') || !isAnswered(a, 'B1')) {
     return {
       id: 'incompleto',
       label: 'Evaluación incompleta',
