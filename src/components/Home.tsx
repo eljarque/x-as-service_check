@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { FileUp, Play, RotateCcw, ListChecks, AlertCircle, Plus, Trash2 } from 'lucide-react';
+import { FileUp, Play, RotateCcw, ListChecks, AlertCircle, Plus, Trash2, Lightbulb } from 'lucide-react';
 import type { Assessment } from '../types';
 import { importJson } from '../lib/storage';
 
@@ -125,6 +125,17 @@ export function Home({
             versiones es el dato más valioso de la sesión.
           </span>
         </label>
+
+        <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          <Lightbulb className="w-4 h-4 flex-none mt-0.5 text-amber-600" />
+          <span>
+            <strong>Cuidado con el sesgo de autocomplacencia.</strong> Una autoevaluación tiende a
+            responder “Sí” o “Parcial” para no reconocer carencias, sobre todo en las preguntas
+            llave. El antídoto es activar el <strong>contraste con el consumidor</strong>: si el
+            proveedor dice “Sí” y el consumidor dice “No”, esa divergencia es la señal más fiable de
+            que la interacción real no es tan As-a-Service como parece.
+          </span>
+        </div>
 
         {assessment.consumerContrast && (
           <div className="mt-3 rounded-lg border border-violet-100 bg-violet-50/50 p-3">
